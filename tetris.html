@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ja">
+	<head>
+		<meta charset="UTF-8" />
+		<title>テトリス</title>
+		<script src="//cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
+		<script src="shape_types.js"></script>
+		<style>
+			body {
+				margin: 0;
+				background-color: #ccc;
+			}
+			canvas {
+				display: block;
+				margin: auto;
+			}
+		</style>
+	</head>
+	<body>
+		<script>
+			const GRID_ROW = 15;
+			const GRID_COL = 10;
+			const BLOCK_SIZE = 40;
+			const WORLD_WIDTH = BLOCK_SIZE * GRID_COL;
+			const WORLD_HEIGHT = BLOCK_SIZE * GRID_ROW;
+			const speed = 100;
+			let blockXarray = [];
+			let blocks = [];
+			let shapeActive = false;
+			let isKeyDown = false;
+			let status = "ready";
+			let cursors;
+
+			const config = {
+				type: Phaser.AUTO,
+				width: WORLD_WIDTH,
+				height: WORLD_HEIGHT,
+				physics: {
+					default: "arcade",
+					arcade: {
+						debug: false,
+					},
+				},
+				scene: {
+					preload: preload,
+					create: create,
+					update: update,
+				},
+				backgroundColor: 0xffffff,
+			};
+			let game = new Phaser.Game(config);
+
+			function preload() {
+				blockXarray = initBlockXarray();
+				blocks = initBlocks();
+				this.load.image("type0", "images/block0.png");
+			}
+
+			function create() {
+				fellShapes = this.physics.add.staticGroup();
+				makeAxisGraphics(this);
+				this.add.grid(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, WORLD_WIDTH, WORLD_HEIGHT, BLOCK_SIZE, BLOCK_SIZE, 0x000000, 0, 0x000000, 0.1);
+				cursors = this.input.keyboard.createCursorKeys();
+			}
+
+			function update() {
+				if (status == "ready" || status == "pause") {
+					if (cursors.space.isDown) {
+						status = "start";
+						this.physics.resume();
+					}
+				} else if (status == "start") {
+					if (cursors.shift.isDown) {
+						status = "pause";
+						this.physics.pause();
+					}
+				}
+
+				if (status != "start") {
+					return;
+				}
+
+				if (!shapeActive) {
+					type = SHAPE_TYPES[0];
+					shape = makeShape(this, type);
+					this.physics.add.collider(shape, fellShapes);
+					shapeActive = true;
+				}
+
+				shape.setVelocityY(speed);
+				move(this, shape);
+				adjustShapeX(shape);
+
+				if (collided(shape)) {
+					let fellBlocks = [];
+					shape.children.iterate((block, i) => {
+						block.disableBody(true, true);
+						if (i > 0) {
+							let x = approximation(block.x);
+							let y = Math.trunc(Math.ceil(block.body.y) / 10);
+							let fellBlock = fellShapes.create(x, y * 10 + BLOCK_SIZE / 2, type.name);
+							rebuildBlocks(fellBlock);
+							if (block.y <= 0) {
+								this.physics.pause();
+							}
+						}
+					});
+					deleteOneLine();
+					shapeActive = false;
+				}
+			}
+
+			function initBlockXarray() {
+				let array = [BLOCK_SIZE / 2];
+				for (i = 1; i < GRID_COL; i++) {
+					array.push(BLOCK_SIZE * i + BLOCK_SIZE / 2);
+				}
+				return array;
+			}
+
+			function initBlocks() {
+				let array = [];
+				for (let i = 0; i < GRID_ROW; i++) {
+					array.push(blankRow());
+				}
+				return array;
+			}
+
+			function blankRow() {
+				let array = [];
+				for (let i = 0; i < GRID_COL; i++) {
+					array[i] = null;
+				}
+				return array;
+			}
+
+			function adjustShapeX(shape) {
+				shape.children.iterate((block, i) => {
+						if (i > 0) {
+							let x = approximation(block.x);
+							block.setX(x);
+						}
+					});
+			}
+
+			// 回転により微妙にX軸がずれるので補正
+			function approximation(value) {
+				var diff = [];
+				var index = 0;
+
+				blockXarray.forEach(function(val, i) {
+					diff[i] = Math.abs(value - val);
+					index = diff[index] < diff[i] ? index : i;
+				});
+				return blockXarray[index];
+			}
+
+			function makeAxisGraphics(game) {
+				let graphics = game.make.graphics();
+				graphics.fillStyle(0x000000, 1.0);
+				graphics.fillPoint(BLOCK_SIZE, BLOCK_SIZE, 1);
+				graphics.generateTexture("axis", 1, 1);
+				return graphics;
+			}
+
+			function collided(shape) {
+				let touching = false;
+				shape.children.iterate((block) => {
+					if (block.body.touching.down || block.body.y >= 560) {
+						touching = true;
+					}
+				});
+				return touching;
+			}
+
+			function move(game, shape) {
+				const leftLimit = BLOCK_SIZE / 2;
+				const rightLimit = BLOCK_SIZE * GRID_COL - BLOCK_SIZE / 2;
+				if (cursors.left.isDown) {
+					if (!isKeyDown && leftLimit < getMinX(shape)) {
+						collidedLeftAndRight(shape)
+						shape.incX(BLOCK_SIZE * -1);
+						isKeyDown = true;
+					}
+				} else if (cursors.right.isDown) {
+					if (!isKeyDown && rightLimit > getMaxX(shape)) {
+						shape.incX(BLOCK_SIZE);
+						isKeyDown = true;
+					}
+				} else if (cursors.up.isDown) {
+					if (!isKeyDown) {
+						isKeyDown = true;
+						rotateShape(game, type);
+					}
+				} else {
+					isKeyDown = false;
+					shape.setVelocityX(0);
+				}
+			}
+
+			function collidedLeftAndRight(shape) {
+				shape.children.iterate((block) => {
+					console.log(block.body.embedded);
+					if (block.body.onWall()) {
+						return true;
+					}
+				});
+				return false;
+			}
+
+			function getMinX(shape) {
+				let minX = 99999;
+				shape.children.iterate((block) => {
+					minX = block.x < minX ? block.x : minX;
+				});
+				return minX;
+			}
+
+			function getMaxX(shape) {
+				let maxX = 0;
+				shape.children.iterate((block) => {
+					maxX = block.x > maxX ? block.x : maxX;
+				});
+				return maxX;
+			}
+
+			function makeShape(game, type) {
+				let shape = game.physics.add.group();
+				const adjust = BLOCK_SIZE * (GRID_COL / 2 - 1) + BLOCK_SIZE / 2;
+				let sprite = shape.create(BLOCK_SIZE * (GRID_COL / 2), BLOCK_SIZE * -1 - BLOCK_SIZE / 2, "axis");
+				type.blocks.forEach((block, index) => {
+					const x = BLOCK_SIZE * block.x + adjust;
+					const y = BLOCK_SIZE * block.y - type.rows * BLOCK_SIZE;
+					shape.create(x, y, type.name);
+				});
+				return shape;
+			}
+
+			function rotateShape(game, type) {
+				shape.rotateAround(shape.getChildren()[0], 90 * (Math.PI / 180) * -1);
+			}
+
+			function rebuildBlocks(fellBlock) {
+				const rowIdx = Math.trunc(fellBlock.y / BLOCK_SIZE);
+				const colIdx = Math.trunc(fellBlock.body.x / BLOCK_SIZE);
+				blocks[rowIdx][colIdx] = fellBlock;
+				blocksLog();
+			}
+
+			function deleteOneLine() {
+				let completedRowIndex = [];
+
+				// 揃った行を消す
+				for (let [i, row] of blocks.entries()) {
+					let rowCompleted = row.every((elem) => elem != null);
+					if (rowCompleted) {
+						completedRowIndex.push(i);
+						for (let sprite of row) {
+							sprite.disableBody(true, true);
+						}
+					}
+				}
+
+				// 行が空いた場合、ブロックを下に落とす
+				for (let compRowIdx of completedRowIndex) {
+					for (let row = 0; row <= compRowIdx; row++) {
+						for (let col = 0; col < GRID_COL; col++) {
+							let sprite = blocks[row][col];
+							if (sprite != null) {
+								sprite.setY(sprite.y + BLOCK_SIZE);
+								sprite.refreshBody();
+							}
+						}
+					}
+				}
+
+				// blocks二次元配列 空いた行を詰める
+				blocks = blocks.filter((row, i) => {
+					return !completedRowIndex.includes(i);
+				});
+
+				// blocks二次元配列 詰めた分、空行を上に足す
+				for (let i of completedRowIndex) {
+					blocks.unshift(blankRow());
+				}
+			}
+
+			function blocksLog() {
+				for (let [i, row] of blocks.entries()) {
+					let str = `[${i}]`;
+					for (let block of row) {
+						if (block != null) {
+							str += "o ";
+						} else {
+							str += "x ";
+						}
+					}
+					console.log(str);
+				}
+			}
+
+		</script>
+	</body>
+</html>
