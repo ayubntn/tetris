@@ -9,10 +9,10 @@
 			body {
 				margin: 0;
 				background-color: #ccc;
-			}
-			canvas {
-				display: block;
-				margin: auto;
+				height: 100vh;
+				display: flex;
+				align-items: center;
+				justify-content: center;
 			}
 		</style>
 	</head>
@@ -166,7 +166,7 @@
 			function collided(shape) {
 				let touching = false;
 				shape.children.iterate((block) => {
-					if (block.body.touching.down || block.body.y >= 560) {
+					if (block.body.touching.down || block.body.y >= (BLOCK_SIZE * GRID_ROW - BLOCK_SIZE)) {
 						touching = true;
 					}
 				});
