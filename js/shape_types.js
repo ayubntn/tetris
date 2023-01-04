@@ -5,9 +5,10 @@ const SHAPE_TYPES = [
             {x: 0, y: 0},
             {x: 1, y: 0},
             {x: 1, y: 1},
+            {x: 1, y: 2},
         ],
         cols: 2,
-        rows: 2
+        rows: 3
     },
     {
         name: 'type1',
@@ -30,5 +31,38 @@ const SHAPE_TYPES = [
         ],
         cols: 2,
         rows: 3
-    }
+    },
+    {
+        name: 'type3',
+        blocks: [
+            {x: 0, y: 0},
+            {x: 0, y: 1},
+            {x: 1, y: 1},
+            {x: 1, y: 2},
+        ],
+        cols: 2,
+        rows: 3
+    },
+    {
+        name: 'type4',
+        blocks: [
+            {x: 0, y: 0},
+            {x: 1, y: 0},
+            {x: 0, y: 1},
+            {x: 1, y: 1},
+        ],
+        cols: 2,
+        rows: 2
+    },
+    {
+        name: 'type5',
+        blocks: [
+            {x: 0, y: 0},
+            {x: 0, y: 1},
+            {x: 1, y: 0},
+            {x: 0, y: 2},
+        ],
+        cols: 2,
+        rows: 3
+    },
 ];

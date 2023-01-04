@@ -1,10 +1,10 @@
 class Tetris {
 	static run() {
-		let speed = 100;
+		let speed = 50;
 		let isKeyDown = false;
 		let status = "ready";
 		let cursors;
-		let config = new TetrisConfig(15, 10, 40);
+		let config = new TetrisConfig(18, 10, 40);
 		let phaserConfig = {
 			type: Phaser.AUTO,
 			width: config.width,
@@ -30,6 +30,9 @@ class Tetris {
 			this.load.image("type0", "images/block0.png");
 			this.load.image("type1", "images/block1.png");
 			this.load.image("type2", "images/block2.png");
+			this.load.image("type3", "images/block3.png");
+			this.load.image("type4", "images/block4.png");
+			this.load.image("type5", "images/block5.png");
 		}
 
 		function create() {
@@ -100,8 +103,11 @@ class Tetris {
 					isKeyDown = true;
 					shape.rotate();
 				}
+            } else if (cursors.down.isDown) {
+                speed = 200;
 			} else {
 				isKeyDown = false;
+                speed = 50;
 			}
 		}
 	}

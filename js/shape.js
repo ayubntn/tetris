@@ -2,7 +2,7 @@ class Shape {
 	constructor(game, config) {
 		this.config = config;
 
-        const random = Math.floor(Math.random() * 3);
+        const random = Math.floor(Math.random() * SHAPE_TYPES.length);
 		const type = SHAPE_TYPES[random];
         this.width = type.cols * config.blockSize;
         this.height = type.rows * config.blockSize;
@@ -77,7 +77,7 @@ class Shape {
 	collided() {
 		let touching = false;
 		this.getBlocks().forEach((block) => {
-			if (!touching) {
+			if (!touching && block != this.axis) {
 				if (block.body.touching.down || block.y >= this.config.height - this.config.blockHalfSize) {
 					touching = true;
 				}
