@@ -1,9 +1,7 @@
 class Shape {
-	constructor(game, config) {
+	constructor(game, config, type) {
 		this.config = config;
 
-        const random = Math.floor(Math.random() * SHAPE_TYPES.length);
-		const type = SHAPE_TYPES[random];
         this.width = type.cols * config.blockSize;
         this.height = type.rows * config.blockSize;
 
@@ -21,7 +19,8 @@ class Shape {
 		type.blocks.forEach((block) => {
 			const x = config.blockSize * block.x + config.halfWidth - adjust;
 			const y = (config.blockSize * block.y + config.blockHalfSize) * -1;
-			shape.create(x, y, type.name);
+			let sprite = shape.create(x, y, type.name);
+			sprite.setScale(config.blockSize / 40);
 		});
 
 		this.physicsGroup = shape;
@@ -86,6 +85,10 @@ class Shape {
 		return touching;
 	}
 
+	incPoint(x, y) {
+		this.physicsGroup.incXY(x, y);
+	}
+
 	setVelocityY(velocity) {
 		this.physicsGroup.setVelocityY(velocity);
 	}
@@ -126,5 +129,11 @@ class Shape {
 			minY = block.y < minY ? block.y : minY;
 		});
 		return minY;
+	}
+
+	disable() {
+		this.getBlocks().forEach((block) => {
+			block.disableBody(true, true);
+		});
 	}
 }

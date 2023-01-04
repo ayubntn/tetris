@@ -1,6 +1,7 @@
 class Tetris {
-    static score = 0;
+	static score = 0;
 	static speedLevel = 1;
+	static shapeTypeQueue = new ShapeTypeQueue();
 
 	static run() {
 		let baseSpeed = 50;
@@ -41,7 +42,7 @@ class Tetris {
 
 		function create() {
 			board = new Board(this, config);
-			makeAxisGraphics(this);
+			Tetris.makeAxisGraphics(this, config);
 			this.add.grid(config.width / 2, config.height / 2, config.width, config.height, config.blockSize, config.blockSize, 0x000000, 0, 0x000000, 0.1);
 			cursors = this.input.keyboard.createCursorKeys();
 		}
@@ -64,7 +65,7 @@ class Tetris {
 			}
 
 			if (!shape) {
-				shape = new Shape(this, config);
+				shape = new Shape(this, config, Tetris.shapeTypeQueue.shift());
 				this.physics.add.collider(shape.getPhysicsGroup(), board.getStaticBlocks());
 			}
 
@@ -85,14 +86,6 @@ class Tetris {
 			}
 		}
 
-		function makeAxisGraphics(game) {
-			let graphics = game.make.graphics();
-			graphics.fillStyle(0x000000, 1.0);
-			graphics.fillPoint(config.blockSize, config.blockSize, 1);
-			graphics.generateTexture("axis", 1, 1);
-			return graphics;
-		}
-
 		function cursorOperation() {
 			if (cursors.left.isDown) {
 				if (!isKeyDown) {
@@ -109,20 +102,20 @@ class Tetris {
 					isKeyDown = true;
 					shape.rotate();
 				}
-            } else if (cursors.down.isDown) {
-                speed = baseSpeed * 4;
+			} else if (cursors.down.isDown) {
+				speed = baseSpeed * 4;
 			} else {
 				isKeyDown = false;
-                speed = baseSpeed;
+				speed = baseSpeed;
 			}
 		}
 	}
 
-    static side() {
+	static side() {
 		let phaserConfig = {
 			type: Phaser.AUTO,
 			width: 200,
-			height: 200,
+			height: 720,
 			physics: {
 				default: "arcade",
 				arcade: {
@@ -134,29 +127,64 @@ class Tetris {
 				create: create,
 				update: update,
 			},
-			backgroundColor: 0xcccccc,
+			backgroundColor: 0xdddddd,
 		};
 		let game = new Phaser.Game(phaserConfig);
 		let scoreText;
 		let speedText;
-	
+		let config;
+		let shiftCount = 0;
+		let nextShapes = [];
+
 		function preload() {
-		
+			this.load.image("type0", "images/block0.png");
+			this.load.image("type1", "images/block1.png");
+			this.load.image("type2", "images/block2.png");
+			this.load.image("type3", "images/block3.png");
+			this.load.image("type4", "images/block4.png");
+			this.load.image("type5", "images/block5.png");
+			this.load.image("key_operation", "images/key_operation.png");
 		}
 
 		function create() {
-			scoreText = this.add.text(16, 16, "スコア: 0", { fontSize: "16px", fill: "#000" });
-			speedText = this.add.text(16, 40, "スピードレベル: 1", { fontSize: "16px", fill: "#000" });
+			this.add.image(100, 550, "key_operation");
+			this.add.text(16, 16, "テトリス", { fontSize: "40px", fill: "#000" });
+			const textStyle = { fontSize: "16px", fill: "#000" };
+			scoreText = this.add.text(16, 100, "スコア: 0", textStyle);
+			speedText = this.add.text(16, 140, "スピードレベル: 1", textStyle);
+			this.add.text(16, 200, "つぎ１", textStyle);
+			this.add.text(16, 270, "つぎ２", textStyle);
+			this.add.text(16, 340, "つぎ３", textStyle);
+			config = new TetrisConfig(4, 4, 15);
+			Tetris.makeAxisGraphics(this, config);
+
+			Tetris.shapeTypeQueue.types.forEach((type, i) => {
+				let shape = new Shape(this, config, type);
+				shape.incPoint(70, 150 + 70 * (i + 1))
+				nextShapes.push(shape);
+			});
 		}
 
 		function update() {
 			scoreText.setText("スコア: " + Tetris.score * 10);
 			speedText.setText("スピードレベル: " + Tetris.speedLevel);
-		}
 
+			if (Tetris.shapeTypeQueue.shiftCount > shiftCount) {
+				nextShapes.forEach((shape) => {
+					shape.disable();
+				});
+				nextShapes = [];
+				Tetris.shapeTypeQueue.types.forEach((type, i) => {
+					let shape = new Shape(this, config, type);
+					shape.incPoint(70, 150 + 70 * (i + 1))
+					nextShapes.push(shape);
+				});
+				shiftCount = Tetris.shapeTypeQueue.shiftCount;
+			}
+		}
 	}
 
-    static approximation(blockSteps, value) {
+	static approximation(blockSteps, value) {
 		let diff = [];
 		let index = 0;
 
@@ -165,5 +193,13 @@ class Tetris {
 			index = diff[index] < diff[i] ? index : i;
 		});
 		return blockSteps[index];
+	}
+
+	static makeAxisGraphics(game, config) {
+		let graphics = game.make.graphics();
+		graphics.fillStyle(0x000000, 1.0);
+		graphics.fillPoint(config.blockSize, config.blockSize, 1);
+		graphics.generateTexture("axis", 1, 1);
+		return graphics;
 	}
 }
