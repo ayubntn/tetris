@@ -8,12 +8,14 @@ class TetrisConfig {
 		this.blockHalfSize = this.blockSize / 2;
 		this.halfWidth = this.width / 2;
 		this.blockSteps = [this.blockHalfSize];
-		for (let i = 1; i < this.col; i++) {
+		for (let i = 1; i < this.row; i++) {
 			this.blockSteps.push(this.blockSize * i + this.blockHalfSize);
+		}
+		this.grid = [];
+		for (let i = 0; i < this.row; i++) {
+			this.grid.push(this.blockSize * i);
 		}
     }
 
-    center() {
-        return this.width / 2;
-    }
+    
 }

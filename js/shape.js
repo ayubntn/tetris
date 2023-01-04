@@ -1,38 +1,74 @@
 class Shape {
 	constructor(game, config) {
-        this.config = config;
+		this.config = config;
 
-		const type = SHAPE_TYPES[0];
+        const random = Math.floor(Math.random() * 2);
+		const type = SHAPE_TYPES[random];
+        this.width = type.cols * config.blockSize;
+        this.height = type.rows * config.blockSize;
 
 		let shape = game.physics.add.group();
-		const adjust = config.blockHalfSize;
-		shape.create(config.halfWidth, config.blockSize * -1 - config.blockHalfSize, "axis");
+		const adjust = config.blockHalfSize + config.blockSize * (type.cols / 2 - 1);
+
+		let shapeCenterX = config.halfWidth;
+		if (type.cols % 2 === 1) {
+			shapeCenterX += config.blockHalfSize;
+		}
+
+		let shapeCenterY = type.rows * config.blockSize * -1 + (type.rows * config.blockSize) / 2;
+
+		this.axis = shape.create(shapeCenterX, shapeCenterY, "axis");
 		type.blocks.forEach((block) => {
 			const x = config.blockSize * block.x + config.halfWidth - adjust;
-			const y = config.blockSize * block.y - type.rows * config.blockSize;
+			const y = (config.blockSize * block.y + config.blockHalfSize) * -1;
 			shape.create(x, y, type.name);
 		});
 
 		this.physicsGroup = shape;
+		this.hasOdd = type.cols % 2 === 1 || type.rows % 2 === 1;
+		this.xOdd = type.cols % 2 === 1;
+        this.direction = 1;
 	}
 
-    getPhysicsGroup() {
-        return this.physicsGroup;
-    }
+	getPhysicsGroup() {
+		return this.physicsGroup;
+	}
 
-    getBlocks() {
-        return this.physicsGroup.getChildren();
-    }
+	getBlocks() {
+		return this.physicsGroup.getChildren();
+	}
 
 	rotate() {
-		let axis = this.getBlocks()[0];
-		this.physicsGroup.rotateAround(axis, 90 * (Math.PI / 180) * -1);
+        let length = this.width;
+        if (this.direction % 2 === 1) {
+            length = this.height;
+        }
+        let left = this.axis.x - length / 2;
+        let right = this.axis.x + length / 2 + (this.xOdd ? this.config.blockHalfSize : 0);
+        if (left < 0) {
+            this.physicsGroup.incX(this.config.blockSize);
+        }
+        if (right > this.config.width) {
+            this.physicsGroup.incX((right - this.config.width) * -1);
+        }
+
+        if (this.hasOdd) {
+			if (this.xOdd) {
+				this.physicsGroup.incX(this.config.blockHalfSize);
+			} else {
+				this.physicsGroup.incX(this.config.blockHalfSize * -1);
+			}
+			this.xOdd = !this.xOdd;
+		}
+		this.physicsGroup.rotateAround(this.axis, 90 * (Math.PI / 180) * -1);
+        this.direction = (this.direction + 1) % 4;
+
 	}
 
 	adjustX() {
 		this.getBlocks().forEach((block) => {
-			if (block.texture.key != 'axis') {
-				let x = this._approximation(block.x);
+			if (block.texture.key != "axis") {
+				let x = Tetris.approximation(this.config.blockSteps, block.x);
 				block.setX(x);
 			}
 		});
@@ -41,8 +77,10 @@ class Shape {
 	collided() {
 		let touching = false;
 		this.getBlocks().forEach((block) => {
-			if (block.body.touching.down || block.body.y >= this.config.height - this.config.blockSize) {
-				touching = true;
+			if (!touching) {
+				if (block.body.touching.down || block.y >= this.config.height - this.config.blockHalfSize) {
+					touching = true;
+				}
 			}
 		});
 		return touching;
@@ -82,22 +120,11 @@ class Shape {
 		return maxX;
 	}
 
-    getMinY() {
-        let minY = 99999;
-        this.getBlocks().forEach((block) => {
+	getMinY() {
+		let minY = 99999;
+		this.getBlocks().forEach((block) => {
 			minY = block.y < minY ? block.y : minY;
 		});
 		return minY;
-    }
-
-	_approximation(value) {
-		let diff = [];
-		let index = 0;
-
-		this.config.blockSteps.forEach((val, i) => {
-			diff[i] = Math.abs(value - val);
-			index = diff[index] < diff[i] ? index : i;
-		});
-		return this.config.blockSteps[index];
 	}
 }

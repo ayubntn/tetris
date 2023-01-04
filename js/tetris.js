@@ -1,6 +1,6 @@
 class Tetris {
 	static run() {
-		let speed = 200;
+		let speed = 100;
 		let isKeyDown = false;
 		let status = "ready";
 		let cursors;
@@ -12,7 +12,7 @@ class Tetris {
 			physics: {
 				default: "arcade",
 				arcade: {
-					debug: true,
+					debug: false,
 				},
 			},
 			scene: {
@@ -102,5 +102,16 @@ class Tetris {
 				isKeyDown = false;
 			}
 		}
+	}
+
+    static approximation(blockSteps, value) {
+		let diff = [];
+		let index = 0;
+
+		blockSteps.forEach((val, i) => {
+			diff[i] = Math.abs(value - val);
+			index = diff[index] < diff[i] ? index : i;
+		});
+		return blockSteps[index];
 	}
 }

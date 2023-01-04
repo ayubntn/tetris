@@ -20,16 +20,16 @@ class Board {
 
 	stack(shape) {
 		shape.getBlocks().forEach((block) => {
-            block.disableBody(true, true);
-            if (block.texture.key != 'axis') {
-                let y = Math.trunc(Math.ceil(block.body.y) / 10);
-                let fellBlock = this.staticBlocks.create(block.x, y * 10 + this.config.blockHalfSize, block.texture.key);
+			block.disableBody(true, true);
+			if (block.texture.key != "axis") {
+				let y = Tetris.approximation(this.config.blockSteps, block.y);
+				let fellBlock = this.staticBlocks.create(block.x, y, block.texture.key);
 				const rowIdx = Math.trunc(fellBlock.y / this.config.blockSize);
 				const colIdx = Math.trunc(fellBlock.body.x / this.config.blockSize);
 				this.stackedBlocks[rowIdx][colIdx] = fellBlock;
 				this._stackedBlocksLog();
-            }
-        });
+			}
+		});
 	}
 
 	deleteCompLine() {
