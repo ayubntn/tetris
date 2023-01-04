@@ -21,7 +21,7 @@ class Board {
 	stack(shape) {
 		shape.getBlocks().forEach((block) => {
 			block.disableBody(true, true);
-			if (block.texture.key != "axis") {
+			if (block != shape.axis) {
 				let y = Tetris.approximation(this.config.blockSteps, block.y);
 				let fellBlock = this.staticBlocks.create(block.x, y, block.texture.key);
 				const rowIdx = Math.trunc(fellBlock.y / this.config.blockSize);
@@ -68,6 +68,8 @@ class Board {
 		for (let i of completedRowIndex) {
 			this.stackedBlocks.unshift(this._blankRow.concat());
 		}
+
+		return completedRowIndex.length;
 	}
 
 	_stackedBlocksLog() {

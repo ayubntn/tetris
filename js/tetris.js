@@ -1,6 +1,10 @@
 class Tetris {
+    static score = 0;
+	static speedLevel = 1;
+
 	static run() {
-		let speed = 50;
+		let baseSpeed = 50;
+		let speed = baseSpeed;
 		let isKeyDown = false;
 		let status = "ready";
 		let cursors;
@@ -64,7 +68,7 @@ class Tetris {
 				this.physics.add.collider(shape.getPhysicsGroup(), board.getStaticBlocks());
 			}
 
-			shape.setVelocityY(speed);
+			shape.setVelocityY(speed * Tetris.speedLevel);
 			cursorOperation();
 			// 回転により微妙にX軸がずれるので補正
 			shape.adjustX();
@@ -74,8 +78,10 @@ class Tetris {
 					this.physics.pause();
 				}
 				board.stack(shape);
-				board.deleteCompLine();
+				Tetris.score += board.deleteCompLine();
 				shape = null;
+
+				Tetris.speedLevel = Math.floor(Tetris.score / 10) + 1;
 			}
 		}
 
@@ -104,12 +110,50 @@ class Tetris {
 					shape.rotate();
 				}
             } else if (cursors.down.isDown) {
-                speed = 200;
+                speed = baseSpeed * 4;
 			} else {
 				isKeyDown = false;
-                speed = 50;
+                speed = baseSpeed;
 			}
 		}
+	}
+
+    static side() {
+		let phaserConfig = {
+			type: Phaser.AUTO,
+			width: 200,
+			height: 200,
+			physics: {
+				default: "arcade",
+				arcade: {
+					debug: false,
+				},
+			},
+			scene: {
+				preload: preload,
+				create: create,
+				update: update,
+			},
+			backgroundColor: 0xcccccc,
+		};
+		let game = new Phaser.Game(phaserConfig);
+		let scoreText;
+		let speedText;
+	
+		function preload() {
+		
+		}
+
+		function create() {
+			scoreText = this.add.text(16, 16, "スコア: 0", { fontSize: "16px", fill: "#000" });
+			speedText = this.add.text(16, 40, "スピードレベル: 1", { fontSize: "16px", fill: "#000" });
+		}
+
+		function update() {
+			scoreText.setText("スコア: " + Tetris.score * 10);
+			speedText.setText("スピードレベル: " + Tetris.speedLevel);
+		}
+
 	}
 
     static approximation(blockSteps, value) {

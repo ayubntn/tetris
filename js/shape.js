@@ -67,7 +67,7 @@ class Shape {
 
 	adjustX() {
 		this.getBlocks().forEach((block) => {
-			if (block.texture.key != "axis") {
+			if (block != this.axis) {
 				let x = Tetris.approximation(this.config.blockSteps, block.x);
 				block.setX(x);
 			}
