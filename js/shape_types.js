@@ -10,7 +10,7 @@ const SHAPE_TYPES = [
         rows: 2
     },
     {
-        name: 'type0',
+        name: 'type1',
         blocks: [
             {x: 0, y: 0},
             {x: 1, y: 0},
@@ -19,5 +19,16 @@ const SHAPE_TYPES = [
         ],
         cols: 4,
         rows: 1
+    },
+    {
+        name: 'type2',
+        blocks: [
+            {x: 0, y: 0},
+            {x: 0, y: 1},
+            {x: 0, y: 2},
+            {x: 1, y: 1},
+        ],
+        cols: 2,
+        rows: 3
     }
 ];

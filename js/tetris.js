@@ -28,6 +28,8 @@ class Tetris {
 
 		function preload() {
 			this.load.image("type0", "images/block0.png");
+			this.load.image("type1", "images/block1.png");
+			this.load.image("type2", "images/block2.png");
 		}
 
 		function create() {

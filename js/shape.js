@@ -2,7 +2,7 @@ class Shape {
 	constructor(game, config) {
 		this.config = config;
 
-        const random = Math.floor(Math.random() * 2);
+        const random = Math.floor(Math.random() * 3);
 		const type = SHAPE_TYPES[random];
         this.width = type.cols * config.blockSize;
         this.height = type.rows * config.blockSize;
