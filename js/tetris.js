@@ -38,6 +38,7 @@ class Tetris {
 			this.load.image("type3", "images/block3.png");
 			this.load.image("type4", "images/block4.png");
 			this.load.image("type5", "images/block5.png");
+			this.load.spritesheet('lightImage', 'images/pipo-btleffect008.png', { frameWidth: 120, frameHeight: 120 });
 		}
 
 		function create() {
@@ -45,6 +46,13 @@ class Tetris {
 			Tetris.makeAxisGraphics(this, config);
 			this.add.grid(config.width / 2, config.height / 2, config.width, config.height, config.blockSize, config.blockSize, 0x000000, 0, 0x000000, 0.1);
 			cursors = this.input.keyboard.createCursorKeys();
+
+			this.anims.create({
+				key: 'light',
+				frames: this.anims.generateFrameNumbers('lightImage', { start: 0, end: 8 }),
+				frameRate: 10,
+				repeat: 1
+			});
 		}
 
 		function update() {
@@ -60,7 +68,7 @@ class Tetris {
 				}
 			}
 
-			if (status != "start") {
+			if (status != "start" || board.considering) {
 				return;
 			}
 
@@ -79,10 +87,10 @@ class Tetris {
 					this.physics.pause();
 				}
 				board.stack(shape);
-				Tetris.score += board.deleteCompLine();
-				shape = null;
-
-				Tetris.speedLevel = Math.floor(Tetris.score / 10) + 1;
+				Tetris.score += board.deleteCompLine(() => {
+					shape = null;
+					Tetris.speedLevel = Math.floor(Tetris.score / 10) + 1;
+				});
 			}
 		}
 
