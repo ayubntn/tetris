@@ -7,6 +7,7 @@ class TetrisConfig {
 		this.height = this.blockSize * this.row;
 		this.blockHalfSize = this.blockSize / 2;
 		this.halfWidth = this.width / 2;
+		this.halfHeight = this.height / 2;
 		this.blockSteps = [this.blockHalfSize];
 		for (let i = 1; i < this.row; i++) {
 			this.blockSteps.push(this.blockSize * i + this.blockHalfSize);

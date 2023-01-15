@@ -25,6 +25,7 @@ function createMain() {
     let game = new Phaser.Game(phaserConfig);
     let board;
     let shape;
+    let infomation;
 
     function preload() {
         this.load.image("type0", "images/block0.png");
@@ -38,6 +39,7 @@ function createMain() {
 
     function create() {
         board = new Board(this, config);
+        infomation = new Infomation(this, config);
         Tetris.makeAxisGraphics(this, config);
         this.add.grid(config.width / 2, config.height / 2, config.width, config.height, config.blockSize, config.blockSize, 0x000000, 0, 0x000000, 0.1);
         cursors = this.input.keyboard.createCursorKeys();
@@ -54,11 +56,13 @@ function createMain() {
         if (status == "ready" || status == "pause") {
             if (cursors.space.isDown) {
                 status = "start";
+                infomation.clear();
                 this.physics.resume();
             }
         } else if (status == "start") {
             if (cursors.shift.isDown) {
                 status = "pause";
+                infomation.showPause();
                 this.physics.pause();
             }
         }
@@ -72,15 +76,15 @@ function createMain() {
             this.physics.add.collider(shape.getPhysicsGroup(), board.getStaticBlocks());
         }
 
-        shape.setVelocityY(speed * Tetris.speedLevel);
-        console.log(speed + (Tetris.speedLevel * 30));
+        shape.setVelocityY(speed + (Tetris.speedLevel * 30));
         cursorOperation();
         // 回転により微妙にX軸がずれるので補正
         shape.adjustX();
 
         if (shape.collided()) {
             if (shape.getMinY() <= 0) {
-                this.physics.pause();
+                infomation.showEnd();
+                status = 'end';
             }
             board.stack(shape);
             Tetris.score += board.deleteCompLine(() => {
